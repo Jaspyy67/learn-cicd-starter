@@ -18,19 +18,19 @@ jobs:
           with:
             go-version: "1.22.0"
 
-        - name: gcloud
-          uses: google-github-actions/setup-gcloud@v1
-          with:
-            service_account_key: ${{ secrets.GCP_CREDENTIALS }}
-            project_id: innate-buckeye-452723-g6
-            install_components: 'gcloud'
-            export_default_credentials: true  # Add this line
+        - name: Build app
+          run: scripts/buildprod.sh
 
-        - name: Authenticate with Google Cloud
-          run: |
-            gcloud auth activate-service-account --key-file=${{ runner.temp }}/gcp-sa-key.json
-          env:
-            GCP_SA_KEY: ${{ secrets.GCP_CREDENTIALS }}
-            
+        - id: 'auth'
+          name: 'Authenticate to Google Cloud'
+          uses: 'google-github-actions/auth@v1'
+          with:
+            credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+        - name: 'Set up Cloud SDK'
+          uses: 'google-github-actions/setup-gcloud@v1'
+          with:
+            project_id: innate-buckeye-452723-g6
+
         - name: Build and push Docker image
           run: gcloud builds submit --tag us-central1-docker.pkg.dev/innate-buckeye-452723-g6/notely-ar-repo/notely-app:latest .
