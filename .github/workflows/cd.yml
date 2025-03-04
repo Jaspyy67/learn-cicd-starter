@@ -28,4 +28,4 @@ jobs:
             project_id: innate-buckeye-452723-g6
 
         - name: Build and push Docker image
-          run: gcloud builds submit --tag us-central1-docker.pkg.dev/innate-buckeye-452723-g6/my-repository/my-image:latest .
+          run: gcloud builds submit --tag us-central1-docker.pkg.dev/innate-buckeye-452723-g6/notely-ar-repo
