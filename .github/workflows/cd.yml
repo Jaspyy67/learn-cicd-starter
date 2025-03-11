@@ -43,35 +43,13 @@ jobs:
             echo "${{ secrets.GCP_CREDENTIALS }}" > gcp-sa-key.json
             cat gcp-sa-key.json
 
-        - name: Debug Secret Access
-          run: |
-            # Test if the secret exists using a condition
-            if [[ "${{ secrets.DATABASE_URL }}" != "" ]]; then
-              echo "Secret exists in GitHub"
-            else
-              echo "SECRET DOES NOT EXIST in GitHub"
-            fi
-            
-            # Check environment variable
-            if [[ -n "$DATABASE_URL" ]]; then
-              echo "ENV variable exists: ${DATABASE_URL:0:10}..."
-            else
-              echo "ENV variable DOES NOT EXIST"
-            fi
-            
-            # Test direct access in a command
-            echo "Direct test: ${{ secrets.DATABASE_URL != '' }}"
-          env:
-            TEST_DB_URL: ${{ secrets.DATABASE_URL }}
-
         - name: Install goose
           run: go install github.com/pressly/goose/v3/cmd/goose@latest
 
-        - name: Run migrations directly
+        - name: Run migrations
           run: |
-            echo "Running migrations directly from workflow"
-            echo "Secret value check: ${{ secrets.DATABASE_URL != '' }}"
-            goose -dir sql/schema turso "${{ secrets.DATABASE_URL }}" up
+            chmod +x ./scripts/migrateup.sh
+            ./scripts/migrateup.sh
 
         - name: Deploy to Cloud Run
           run: gcloud run deploy notely --image us-central1-docker.pkg.dev/innate-buckeye-452723-g6/notely-ar-repo/notely-app:latest --region us-central1 --allow-unauthenticated --project innate-buckeye-452723-g6 --max-instances=4
