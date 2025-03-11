@@ -45,29 +45,33 @@ jobs:
 
         - name: Debug Secret Access
           run: |
-            if [[ -n "${{ secrets.DATABASE_URL }}" ]]; then
-              echo "Secret exists and is not empty"
-              # Check the environment variable value
-              if [[ -n "$DATABASE_URL" ]]; then
-                echo "Environment variable is set: ${DATABASE_URL:0:10}..."
-              else
-                echo "Environment variable is NOT set properly"
-              fi
+            # Test if the secret exists using a condition
+            if [[ "${{ secrets.DATABASE_URL }}" != "" ]]; then
+              echo "Secret exists in GitHub"
             else
-              echo "Secret is empty or not accessible"
+              echo "SECRET DOES NOT EXIST in GitHub"
             fi
+            
+            # Check environment variable
+            if [[ -n "$DATABASE_URL" ]]; then
+              echo "ENV variable exists: ${DATABASE_URL:0:10}..."
+            else
+              echo "ENV variable DOES NOT EXIST"
+            fi
+            
+            # Test direct access in a command
+            echo "Direct test: ${{ secrets.DATABASE_URL != '' }}"
           env:
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            TEST_DB_URL: ${{ secrets.DATABASE_URL }}
 
         - name: Install goose
           run: go install github.com/pressly/goose/v3/cmd/goose@latest
 
-        - name: Run migrations
+        - name: Run migrations directly
           run: |
-            chmod +x ./scripts/migrateup.sh
-            ./scripts/migrateup.sh
-          env:
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            echo "Running migrations directly from workflow"
+            echo "Secret value check: ${{ secrets.DATABASE_URL != '' }}"
+            goose -dir sql/schema turso "${{ secrets.DATABASE_URL }}" up
 
         - name: Deploy to Cloud Run
           run: gcloud run deploy notely --image us-central1-docker.pkg.dev/innate-buckeye-452723-g6/notely-ar-repo/notely-app:latest --region us-central1 --allow-unauthenticated --project innate-buckeye-452723-g6 --max-instances=4
